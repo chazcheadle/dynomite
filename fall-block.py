@@ -32,11 +32,19 @@ def flame(flame_y, outside=(255,255,0), inside=(255,0,0)):
     pygame.draw.rect(WIN, outside, [WIDTH/2-5, flame_y, 10, 10])
     pygame.draw.rect(WIN, inside, [WIDTH/2-5+2, flame_y+2, 6, 6])
 
-def drawWindow(tnt, flame_y, block):
+def drawWindow(tnt, flame_y, block, score):
+    scoreText = pygame.font.Font('freesansbold.ttf', 70)
+    scoreSurface = scoreText.render(str(score), True, BLACK)
+    # scoreRect = scoreSurface.get_rect()
+    # scoreRect.center = (WIDTH/2), (HEIGHT/2)
+
     WIN.fill(WHITE)
+    WIN.blit(scoreSurface, (20, 20))
+
     WIN.blit(TNT, (tnt.x, tnt.y))
     if block:
         flame(flame_y, GRAY, BLACK)
+        snip(flame_y, tnt, score)
     else:
         flame(flame_y)
 
@@ -45,14 +53,9 @@ def drawWindow(tnt, flame_y, block):
         print("boom")
         boom(tnt)
 
-    if block and flame_y >= tnt.y-8:
-        snip(flame_y, tnt)
-
-    # flame(flame_y)
-
     pygame.display.update()
 
-def snip(flame_y, tnt):
+def snip(flame_y, tnt, score):
     flame(flame_y, BLACK, GRAY)
     pygame.display.update()
     pygame.time.delay(30)
@@ -96,12 +99,10 @@ def snip(flame_y, tnt):
     flame(flame_y, LIGHTGRAY, LIGHTGRAY)
     pygame.display.update()
     pygame.time.delay(50)
-
-
     WIN.fill(WHITE)
     pygame.display.update()
-    largeText = pygame.font.Font('freesansbold.ttf', 100)
-    textSurface = largeText.render("You Win!", True, BLACK)
+    largeText = pygame.font.Font('freesansbold.ttf', 80)
+    textSurface = largeText.render(F"You scored: {score}!", True, BLACK)
     textRect = textSurface.get_rect()
     textRect.center = (WIDTH/2), (HEIGHT/2)
     WIN.blit(textSurface, textRect)
@@ -169,6 +170,8 @@ def main():
     flame_x = WIDTH/2
     flame_y = 1
 
+    score = 0
+
     # TNT behavior
     global block
     last_time = 0
@@ -193,9 +196,11 @@ def main():
         # else:
         #     block = True
         tnt_handle_movement(key_pressed, tnt, last_time)
-        print(F"blocking: {block}")
+        # print(F"blocking: {block}")
 
-        drawWindow(tnt,flame_y, block)
+        drawWindow(tnt,flame_y, block, score)
+        score = int(10 * flame_y)
+
         # flame(flame_y)
         flame_y = flame_y * 1.02
 
