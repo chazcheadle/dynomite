@@ -21,11 +21,11 @@ BLACK = (0, 0, 0)
 GRAY = (100, 100, 100)
 LIGHTGRAY = (200, 200, 200)
 # Players
-TNT_SPRITE = pygame.image.load(os.path.join('assets', 'tnt.png'))
+# TNT_SPRITE = pygame.image.load(os.path.join('assets', 'tnt.png'))
 TNT_WIDTH, TNT_HEIGHT = (100, 103)
-TNT = pygame.transform.scale(TNT_SPRITE, (100, 103))
-TNT_LIT_SPRITE = pygame.image.load(os.path.join('assets', 'tnt-lit.png'))
-TNT_LIT = pygame.transform.scale(TNT_LIT_SPRITE, (100, 103))
+# TNT = pygame.transform.scale(TNT_SPRITE, (100, 103))
+# TNT_LIT_SPRITE = pygame.image.load(os.path.join('assets', 'tnt-lit.png'))
+# TNT_LIT = pygame.transform.scale(TNT_LIT_SPRITE, (100, 103))
 # SHIELD = pygame.draw.rect(WIN, RED, [WIDTH/2-5, flame_y, 10, 10])
 
 # Shield locations
@@ -51,7 +51,6 @@ class Shield():
         self.blocking = False
         self.block_reload = 0
         self.can_reload = True
-        
 
     def draw(self, window):
         self.cooldown()
@@ -86,37 +85,66 @@ class Shield():
 
 class Enemy():
 
-    def __init__(self):
+    def __init__(self, window, x, y):
         self.position = 0
+        self.x = x
+        self.y = y
+        self.rect = pygame.draw.rect(window, RED, [self.x, self.y, 20, 20]) 
+        
 
     def move(self):
-        self.position += VEL
+        self.rect.x += VEL
 
     def draw(self, window):
-        pygame.draw.rect(window, RED, [self.position, HEIGHT/2-10, 20, 20])
+        pygame.draw.rect(window, RED, self.rect)
+
+    def colide(self, other_obj):
+        print(other_obj.shields[3].blocking)
+        if not other_obj.shields[3].blocking and self.rect.colliderect(other_obj):
+            print("crash!")
+            raise SystemExit
+        if other_obj.shields[3].blocking and other_obj.shields[3].shield.colliderect(self.rect):
+            print("blocked!")
+            self.rect = None
+
 
 class Player():
 
     COOLDOWN = 30
     RELOAD_TIME = 12
 
-    def __init__(self):
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
         self.score = 0
         self.health = 100
-        self.mask = pygame.mask.from_surface(TNT)
         self.block_cooldown = 0
         self.blocking = False
         self.block_reload = 0
         self.can_reload = True
+        self.TNT_SPRITE = pygame.image.load(os.path.join('assets', 'tnt.png'))
+        self.TNT_WIDTH, self.TNT_HEIGHT = (100, 103)
+        self.TNT = pygame.transform.scale(self.TNT_SPRITE, (100, 103))
+        self.mask = pygame.mask.from_surface(self.TNT)
+        self.rect = self.TNT_SPRITE.get_rect()
+        self.TNT_LIT_SPRITE = pygame.image.load(os.path.join('assets', 'tnt-lit.png'))
+        self.TNT_LIT = pygame.transform.scale(self.TNT_LIT_SPRITE, (100, 103))
+
+        self.rect.x = self.x - self.TNT_WIDTH/2
+        self.rect.y = self.y - self.TNT_HEIGHT/2
+        self.top_shield = Shield(TOP) 
+        self.right_shield = Shield(RIGHT) 
+        self.bottom_shield = Shield(BOTTOM) 
+        self.left_shield = Shield(LEFT) 
+        self.shields = [self.top_shield, self.right_shield, self.bottom_shield, self.left_shield]
 
     def draw(self, window):
         self.cooldown()
         self.reload_timer()
-        print(self.block_cooldown)
         if self.blocking:
-            window.blit(TNT_LIT, (WIDTH/2-50, HEIGHT/2-54))
+            window.blit(self.TNT_LIT, (WIDTH/2-50, HEIGHT/2-54))
         else:
-            window.blit(TNT, (WIDTH/2-50, HEIGHT/2-54))
+            window.blit(self.TNT, (WIDTH/2-50, HEIGHT/2-54))
 
     def cooldown(self):
         if self.block_cooldown >= self.COOLDOWN:
@@ -158,19 +186,19 @@ def main():
     clock = pygame.time.Clock()
 
     # Create shields objects
-    player = Player()
-    top_shield = Shield(TOP)
-    right_shield = Shield(RIGHT)
-    bottom_shield = Shield(BOTTOM)
-    left_shield = Shield(LEFT)
-    shields = [top_shield, right_shield, bottom_shield, left_shield]
+    player = Player(WIDTH/2, HEIGHT/2)
+    # top_shield = Shield(TOP)
+    # right_shield = Shield(RIGHT)
+    # bottom_shield = Shield(BOTTOM)
+    # left_shield = Shield(LEFT)
+    # shields = [top_shield, right_shield, bottom_shield, left_shield]
 
-    enemy = Enemy()
+    enemy = Enemy(WIN, 0, HEIGHT/2-10)
 
     def drawWindow():
         WIN.fill(WHITE)
         player.draw(WIN)
-        for shield in shields:
+        for shield in player.shields:
             shield.draw(WIN)
         enemy.draw(WIN)
         pygame.display.update()
@@ -188,11 +216,13 @@ def main():
         if key_pressed[pygame.K_ESCAPE]:
             pygame.QUIT()
 
-        top_shield.draw(WIN)
+        # top_shield.draw(WIN)
 
         enemy.move()
+        enemy.colide(player)
+
         player.draw(WIN)
-        handle_input(key_pressed, shields)
+        handle_input(key_pressed, player.shields)
 
     pygame.QUIT()
 
