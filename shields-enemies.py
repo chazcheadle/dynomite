@@ -98,14 +98,14 @@ class Enemy():
     def draw(self, window):
         pygame.draw.rect(window, RED, self.rect)
 
-    def colide(self, other_obj):
-        print(other_obj.shields[3].blocking)
-        if not other_obj.shields[3].blocking and self.rect.colliderect(other_obj):
-            print("crash!")
-            raise SystemExit
-        if other_obj.shields[3].blocking and other_obj.shields[3].shield.colliderect(self.rect):
-            print("blocked!")
-            self.rect = None
+    # def colide(self, other_obj):
+    #     print(other_obj.shields[3].blocking)
+    #     if not other_obj.shields[3].blocking and self.rect.colliderect(other_obj):
+    #         print("crash!")
+    #         raise SystemExit
+    #     if other_obj.shields[3].blocking and other_obj.shields[3].shield.colliderect(self.rect):
+    #         print("blocked!")
+    #         self.rect = None
 
 
 class Player():
@@ -171,6 +171,61 @@ class Player():
         if self.can_reload and self.block_cooldown == 0:
             self.block_cooldown += 1
 
+    def colide(self, other_obj):
+        if not self.shields[3].blocking and other_obj.rect.colliderect(self.rect):
+            boom(self.TNT, self.score)
+        if self.shields[3].blocking and other_obj.rect.colliderect(self.rect):
+            self.score += 10
+            other_obj.rect.x = 0
+
+def boom(tnt, score):
+    WIN.fill(RED)
+    tnt.fill((0, 0, 200), special_flags=pygame.BLEND_RGB_ADD)
+    WIN.blit(tnt, (WIDTH/2-50, HEIGHT/2-54))
+    pygame.display.update()
+    pygame.time.delay(100)
+    WIN.fill(WHITE)
+    WIN.blit(tnt, (WIDTH/2-50, HEIGHT/2-54))
+    tnt.fill((0, 200, 0), special_flags=pygame.BLEND_RGB_ADD)
+    pygame.display.update()
+    pygame.time.delay(100)
+    WIN.fill(BLACK)
+    WIN.blit(tnt, (WIDTH/2-50, HEIGHT/2-54))
+    tnt.fill((200, 0, 0), special_flags=pygame.BLEND_RGB_ADD)
+    pygame.display.update()
+    pygame.time.delay(100)
+    WIN.fill(RED)
+    WIN.blit(tnt, (WIDTH/2-50, HEIGHT/2-54))
+    tnt.fill((255, 255, 255), special_flags=pygame.BLEND_RGB_ADD)
+    pygame.display.update()
+    pygame.time.delay(50)
+    WIN.fill(WHITE)
+    pygame.display.update()
+    pygame.time.delay(50)
+    WIN.fill(RED)
+    pygame.display.update()
+    pygame.time.delay(50)
+    WIN.fill(WHITE)
+    pygame.display.update()
+    largeText = pygame.font.Font('freesansbold.ttf', 100)
+    textSurface = largeText.render("Boom!", True, BLACK)
+    textRect = textSurface.get_rect()
+    textRect.center = (WIDTH/2), (HEIGHT/2)
+    WIN.blit(textSurface, textRect)
+    pygame.display.update()
+    pygame.time.delay(2000)
+    WIN.fill(WHITE)
+    pygame.display.update()
+    largeText = pygame.font.Font('freesansbold.ttf', 80)
+    textSurface = largeText.render(F"You scored: {score}!", True, BLACK)
+    textRect = textSurface.get_rect()
+    textRect.center = (WIDTH/2), (HEIGHT/2)
+    WIN.blit(textSurface, textRect)
+    pygame.display.update()
+    pygame.time.delay(2000)
+    raise SystemExit
+
+
 def handle_input(key_pressed, shields):
     if key_pressed[pygame.K_UP]:
         shields[0].block()
@@ -197,6 +252,10 @@ def main():
 
     def drawWindow():
         WIN.fill(WHITE)
+        scoreText = pygame.font.Font('freesansbold.ttf', 70)
+        scoreSurface = scoreText.render(str(player.score), True, BLACK)
+        WIN.blit(scoreSurface, (20, 20))
+
         player.draw(WIN)
         for shield in player.shields:
             shield.draw(WIN)
@@ -219,7 +278,7 @@ def main():
         # top_shield.draw(WIN)
 
         enemy.move()
-        enemy.colide(player)
+        player.colide(enemy)
 
         player.draw(WIN)
         handle_input(key_pressed, player.shields)
