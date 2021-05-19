@@ -35,14 +35,14 @@ BOTTOM = [WIDTH/2-50, HEIGHT/2+50, 100, 6]
 LEFT = [WIDTH/2-55, HEIGHT/2-50, 5, 100]
 
 # Movement
-VEL = 2
+VEL = 5
 
 block = False
 
 
 class Shield():
-    COOLDOWN = 30
-    RELOAD_TIME = 12
+    COOLDOWN = 10
+    RELOAD_TIME = 10
 
     def __init__(self, position):
         self.position = None
@@ -85,7 +85,7 @@ class Shield():
 
 class Enemy():
 
-    RELOAD_TIME = 30
+    RELOAD_TIME = 20
 
     def __init__(self, window, x, y):
         self.position = 0
@@ -124,8 +124,8 @@ class Arrow():
         self.x = x
         self.y = y
         self.img = img
+        self.rect = self.img.get_rect()
         self.mask = pygame.mask.from_surface(self.img)
-
     def move(self):
         self.x += VEL
 
@@ -133,12 +133,13 @@ class Arrow():
         window.blit(self.img, (self.x, self.y))
 
     def collision(self, obj):
-        return collide(obj, self)
+        return collide(self, obj)
 
 # Determine if two objects collide
 def collide(obj1, obj2):
     offset_x = obj2.x - obj1.x
     offset_y = obj2.y - obj1.y
+    print(obj1.mask.overlap(obj2.mask, (int(offset_x), int(offset_y))))
     return obj1.mask.overlap(obj2.mask, (int(offset_x), int(offset_y))) != None
 
     # def colide(self, other_obj):
@@ -153,8 +154,8 @@ def collide(obj1, obj2):
 
 class Player():
 
-    COOLDOWN = 30
-    RELOAD_TIME = 12
+    COOLDOWN = 10
+    RELOAD_TIME = 10
 
     def __init__(self, x, y):
         self.x = x
@@ -165,11 +166,11 @@ class Player():
         self.blocking = False
         self.block_reload = 0
         self.can_reload = True
-        self.TNT_SPRITE = pygame.image.load(os.path.join('assets', 'tnt.png'))
+        self.TNT = pygame.image.load(os.path.join('assets', 'tnt.png'))
         self.TNT_WIDTH, self.TNT_HEIGHT = (100, 103)
-        self.TNT = pygame.transform.scale(self.TNT_SPRITE, (100, 103))
+        # self.TNT = pygame.transform.scale(self.TNT_SPRITE, (100, 103))
         self.mask = pygame.mask.from_surface(self.TNT)
-        self.rect = self.TNT_SPRITE.get_rect()
+        self.rect = self.TNT.get_rect()
         self.TNT_LIT_SPRITE = pygame.image.load(os.path.join('assets', 'tnt-lit.png'))
         self.TNT_LIT = pygame.transform.scale(self.TNT_LIT_SPRITE, (100, 103))
 
@@ -185,9 +186,9 @@ class Player():
         self.cooldown()
         self.reload_timer()
         if self.blocking:
-            window.blit(self.TNT_LIT, (WIDTH/2-50, HEIGHT/2-54))
+            window.blit(self.TNT_LIT, (self.x, self.y))
         else:
-            window.blit(self.TNT, (WIDTH/2-50, HEIGHT/2-54))
+            window.blit(self.TNT, (self.x, self.y))
 
     def cooldown(self):
         if self.block_cooldown >= self.COOLDOWN:
@@ -215,6 +216,11 @@ class Player():
             self.block_cooldown += 1
 
     def colide(self, other_obj):
+        # for arrow in other_obj:
+        #     print(arrow.rect.x)
+        #     if self.shields[3].blocking and self.rect.colliderect(arrow.rect):
+        #         self.score += 10
+        #         print('blocked')
         if not self.shields[3].blocking and other_obj.rect.colliderect(self.rect):
             boom(self.TNT, self.score)
         if self.shields[3].blocking and other_obj.rect.colliderect(self.rect):
@@ -286,7 +292,7 @@ def main():
     clock = pygame.time.Clock()
 
     # Create shields objects
-    player = Player(WIDTH/2, HEIGHT/2)
+    player = Player(WIDTH/2-50, HEIGHT/2-54)
     # top_shield = Shield(TOP)
     # right_shield = Shield(RIGHT)
     # bottom_shield = Shield(BOTTOM)
@@ -321,7 +327,7 @@ def main():
             pygame.QUIT()
 
         # enemy.move()
-        # player.colide(enemy)
+        # player.colide(enemy.arrows)
 
         enemy.move_arrow(player)
 
