@@ -89,14 +89,46 @@ class Enemy():
         self.position = 0
         self.x = x
         self.y = y
-        self.rect = pygame.draw.rect(window, RED, [self.x, self.y, 20, 20]) 
-        
+        self.img = pygame.image.load(os.path.join('assets', 'flame.png'))
+        # self.mask = pygame.mask.from_surface(self.img)
+        self.arrows = []
 
-    def move(self):
-        self.rect.x += VEL
+    def shoot(self):
+        arrow = Arrow(self.x, self.y, self.img)
+        self.arrows.append(arrow)
 
     def draw(self, window):
-        pygame.draw.rect(window, RED, self.rect)
+        for arrow in self.arrows:
+            arrow.draw(window)
+
+    def move_arrow(self, obj):
+        for arrow in self.arrows:
+            arrow.move()
+            if arrow.collision(obj):
+                self.arrows.remove(arrow)
+                raise SystemExit
+
+class Arrow():
+    def __init__(self, x, y, img):
+        self.x = x
+        self.y = y
+        self.img = img
+        self.mask = pygame.mask.from_surface(self.img)
+
+    def move(self):
+        self.x += VEL
+
+    def draw(self, window):
+        window.blit(self.img, (self.x, self.y))
+
+    def collision(self, obj):
+        return collide(obj, self)
+
+# Determine if two objects collide
+def collide(obj1, obj2):
+    offset_x = obj2.x - obj1.x
+    offset_y = obj2.y - obj1.y
+    return obj1.mask.overlap(obj2.mask, (int(offset_x), int(offset_y))) != None
 
     # def colide(self, other_obj):
     #     print(other_obj.shields[3].blocking)
@@ -225,8 +257,7 @@ def boom(tnt, score):
     pygame.time.delay(2000)
     raise SystemExit
 
-
-def handle_input(key_pressed, shields):
+def handle_input(key_pressed, shields, enemy):
     if key_pressed[pygame.K_UP]:
         shields[0].block()
     if key_pressed[pygame.K_RIGHT]:
@@ -235,6 +266,9 @@ def handle_input(key_pressed, shields):
         shields[2].block()
     if key_pressed[pygame.K_LEFT]:
         shields[3].block()
+
+    if key_pressed[pygame.K_SPACE]:
+        enemy.shoot()
 
 def main():
 
@@ -275,13 +309,13 @@ def main():
         if key_pressed[pygame.K_ESCAPE]:
             pygame.QUIT()
 
-        # top_shield.draw(WIN)
+        # enemy.move()
+        # player.colide(enemy)
 
-        enemy.move()
-        player.colide(enemy)
+        enemy.move_arrow(player)
 
         player.draw(WIN)
-        handle_input(key_pressed, player.shields)
+        handle_input(key_pressed, player.shields, enemy)
 
     pygame.QUIT()
 
