@@ -85,6 +85,8 @@ class Shield():
 
 class Enemy():
 
+    RELOAD_TIME = 30
+
     def __init__(self, window, x, y):
         self.position = 0
         self.x = x
@@ -92,22 +94,31 @@ class Enemy():
         self.img = pygame.image.load(os.path.join('assets', 'flame.png'))
         # self.mask = pygame.mask.from_surface(self.img)
         self.arrows = []
+        self.reload_countdown = 0
 
     def shoot(self):
-        arrow = Arrow(self.x, self.y, self.img)
-        self.arrows.append(arrow)
+        if self.reload_countdown == 0:
+            arrow = Arrow(self.x, self.y, self.img)
+            self.arrows.append(arrow)
+            self.reload_countdown = 1
 
     def draw(self, window):
         for arrow in self.arrows:
             arrow.draw(window)
 
     def move_arrow(self, obj):
+        self.reload_timer()
         for arrow in self.arrows:
             arrow.move()
             if arrow.collision(obj):
                 self.arrows.remove(arrow)
                 raise SystemExit
 
+    def reload_timer(self):
+        if self.reload_countdown >= self.RELOAD_TIME:
+            self.reload_countdown = 0
+        if self.reload_countdown > 0:
+            self.reload_countdown +=1
 class Arrow():
     def __init__(self, x, y, img):
         self.x = x
