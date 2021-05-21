@@ -39,14 +39,19 @@ VEL = 5
 
 block = False
 
-
 class Shield():
-    COOLDOWN = 10
+    COOLDOWN = 20
     RELOAD_TIME = 10
 
     def __init__(self, position):
         self.position = None
-        self.shield = pygame.draw.rect(WIN, RED, position)
+
+        self.shield = pygame.Surface((6, 100)).convert_alpha()
+        self.shield.fill(RED)
+        pygame.draw.polygon(self.shield,(0,255,0),[(0,0),(6,0),(6,100),(0,100)])
+        self.rect = self.shield.get_rect(topleft=(WIDTH/2-50,HEIGHT/2-50))
+        self.mask = pygame.mask.from_surface(self.shield)
+
         self.block_cooldown = 0
         self.blocking = False
         self.block_reload = 0
@@ -56,7 +61,8 @@ class Shield():
         self.cooldown()
         self.reload_timer()
         if self.blocking:
-            pygame.draw.rect(window, RED, self.shield)
+            window.blit(self.shield, self.rect)
+            # pygame.draw.rect(window, RED, self.shield)
 
     def cooldown(self):
         if self.block_cooldown >= self.COOLDOWN:
@@ -110,9 +116,14 @@ class Enemy():
         self.reload_timer()
         for arrow in self.arrows:
             arrow.move()
-            if arrow.collision(obj):
+            if arrow.collision(obj.shields[3]) and obj.shields[3].blocking:
+                print('BLOCKED')
                 self.arrows.remove(arrow)
-                raise SystemExit
+                obj.score += 10
+            elif arrow.collision(obj):
+                self.arrows.remove(arrow)
+                obj.health -= 5
+                # raise SystemExit
 
     def reload_timer(self):
         if self.reload_countdown >= self.RELOAD_TIME:
@@ -137,9 +148,8 @@ class Arrow():
 
 # Determine if two objects collide
 def collide(obj1, obj2):
-    offset_x = obj2.x - obj1.x
-    offset_y = obj2.y - obj1.y
-    print(obj1.mask.overlap(obj2.mask, (int(offset_x), int(offset_y))))
+    offset_x = obj2.rect.x - obj1.x
+    offset_y = obj2.rect.y - obj1.y
     return obj1.mask.overlap(obj2.mask, (int(offset_x), int(offset_y))) != None
 
     # def colide(self, other_obj):
@@ -183,6 +193,7 @@ class Player():
         self.shields = [self.top_shield, self.right_shield, self.bottom_shield, self.left_shield]
 
     def draw(self, window):
+        # print(self.health)
         self.cooldown()
         self.reload_timer()
         if self.blocking:
@@ -304,7 +315,7 @@ def main():
     def drawWindow():
         WIN.fill(WHITE)
         scoreText = pygame.font.Font('freesansbold.ttf', 70)
-        scoreSurface = scoreText.render(str(player.score), True, BLACK)
+        scoreSurface = scoreText.render(F"Score: {str(player.score)}", True, BLACK)
         WIN.blit(scoreSurface, (20, 20))
 
         player.draw(WIN)
