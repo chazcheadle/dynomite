@@ -50,26 +50,30 @@ class Shield():
 
         # Top
         if name == 'top':
-            self.shield = pygame.Surface((100, 6)).convert_alpha()
-            pygame.draw.polygon(self.shield,(0,255,0),[(0,0),(100,0),(100,6),(0,6)])
-            self.rect = self.shield.get_rect(topleft=(WIDTH/2-50,HEIGHT/2-56))
+            self.shield = pygame.Surface((100, 12)).convert_alpha()
+            self.shield.fill(WHITE)
+            pygame.draw.polygon(self.shield,(0,255,0),[(0,12),(50,0),(100,12)])
+            self.rect = self.shield.get_rect(topleft=(WIDTH/2-50,HEIGHT/2-62))
 
         # Right
         if name == 'right':
-            self.shield = pygame.Surface((6, 100)).convert_alpha()
-            pygame.draw.polygon(self.shield,(0,255,0),[(0,0),(6,0),(6,100),(0,100)])
+            self.shield = pygame.Surface((12, 100)).convert_alpha()
+            self.shield.fill(WHITE)
+            pygame.draw.polygon(self.shield,(0,255,0),[(0,0),(12,50),(0,100)])
             self.rect = self.shield.get_rect(topleft=(WIDTH/2+44,HEIGHT/2-50))
 
         # Bottom
         if name == 'bottom':
-            self.shield = pygame.Surface((100, 6)).convert_alpha()
-            pygame.draw.polygon(self.shield,(0,255,0),[(0,0),(100,0),(100,6),(0,6)])
+            self.shield = pygame.Surface((100, 12)).convert_alpha()
+            self.shield.fill(WHITE)
+            pygame.draw.polygon(self.shield,(0,255,0),[(0,0),(100,0),(50,12)])
             self.rect = self.shield.get_rect(topleft=(WIDTH/2-50,HEIGHT/2+50))
 
         # Left
         if name == 'left':
-            self.shield = pygame.Surface((6, 100)).convert_alpha()
-            pygame.draw.polygon(self.shield,(0,255,0),[(0,0),(6,0),(6,100),(0,100)])
+            self.shield = pygame.Surface((12, 100)).convert_alpha()
+            self.shield.fill(WHITE)
+            pygame.draw.polygon(self.shield,(0,255,0),[(12,0),(12,100),(0,50)])
             self.rect = self.shield.get_rect(topleft=(WIDTH/2-50,HEIGHT/2-50))
 
         self.mask = pygame.mask.from_surface(self.shield)
@@ -317,9 +321,6 @@ def handle_input(key_pressed, player, enemy, run):
     if key_pressed[pygame.K_LEFT]:
         player.left_shield.block()
 
-    if run == False and key_pressed[pygame.K_SPACE]:
-        run = True
-
 def main():
 
     clock = pygame.time.Clock()
@@ -352,6 +353,10 @@ def main():
         clock.tick(FPS)
         drawWindow()
 
+        if player.health <= 0:
+            boom(player.TNT, player.score)
+            run = False
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -359,20 +364,16 @@ def main():
             if event.type == FIRE_ARROW:
                 enemy.shoot_random()
 
-        key_pressed = pygame.key.get_pressed()
-        if key_pressed[pygame.K_ESCAPE]:
-            pygame.QUIT
-
         enemy.move_arrow(player)
 
         player.draw(WIN)
+
+        key_pressed = pygame.key.get_pressed()
         handle_input(key_pressed, player, enemy, run)
-
-        if player.health <= 0:
+        if key_pressed[pygame.K_ESCAPE]:
             run = False
-            boom(player.TNT, player.score)
 
-    pygame.QUIT
+    pygame.quit()   
 
 if __name__ == "__main__":
     main()
