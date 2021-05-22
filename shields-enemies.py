@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import pygame
+import random
 import os
 
 from pygame.constants import NOEVENT
@@ -87,24 +88,29 @@ class Shield():
 
     def block(self):
         if self.can_reload and self.block_cooldown == 0:
+            print("blocking")
             self.block_cooldown += 1
 
 class Enemy():
 
     RELOAD_TIME = 20
 
-    def __init__(self, window, x, y):
+    def __init__(self):
         self.position = 0
-        self.x = x
-        self.y = y
         self.img = pygame.image.load(os.path.join('assets', 'flame.png'))
         # self.mask = pygame.mask.from_surface(self.img)
         self.arrows = []
         self.reload_countdown = 0
 
-    def shoot(self):
+    def shoot(self, position):
         if self.reload_countdown == 0:
-            arrow = Arrow(self.x, self.y, self.img)
+            arrow = Arrow(self.img, position)
+            self.arrows.append(arrow)
+            self.reload_countdown = 1
+
+    def shoot_random(self):
+        if self.reload_countdown == 0:
+            arrow = Arrow(self.img, random.choice(['top', 'right', 'bottom', 'left']))
             self.arrows.append(arrow)
             self.reload_countdown = 1
 
@@ -131,14 +137,36 @@ class Enemy():
         if self.reload_countdown > 0:
             self.reload_countdown +=1
 class Arrow():
-    def __init__(self, x, y, img):
-        self.x = x
-        self.y = y
+    def __init__(self, img, position):
+
+        self.position = position
         self.img = img
         self.rect = self.img.get_rect()
         self.mask = pygame.mask.from_surface(self.img)
+        self.vel = 5
+
+        if position == 'top':        
+            self.x = WIDTH/2 - 10
+            self.y = 0
+            self.vel = 5
+        elif position == 'right':
+            self.x = WIDTH
+            self.y = HEIGHT/2 - 20
+            self.vel = -5
+        elif position == 'bottom':
+            self.x = WIDTH/2 - 20
+            self.y = HEIGHT
+            self.vel = -5
+        elif position == 'left':
+            self.x = 0
+            self.y = HEIGHT/2 -20
+            self.vel = 5
+
     def move(self):
-        self.x += VEL
+        if self.position == 'top' or self.position == 'bottom':
+            self.y += self.vel
+        elif self.position == 'right' or self.position == 'left':
+            self.x += self.vel
 
     def draw(self, window):
         window.blit(self.img, (self.x, self.y))
@@ -296,7 +324,7 @@ def handle_input(key_pressed, shields, enemy):
         shields[3].block()
 
     if key_pressed[pygame.K_SPACE]:
-        enemy.shoot()
+        enemy.shoot_random()
 
 def main():
 
@@ -310,7 +338,7 @@ def main():
     # left_shield = Shield(LEFT)
     # shields = [top_shield, right_shield, bottom_shield, left_shield]
 
-    enemy = Enemy(WIN, 0, HEIGHT/2-10)
+    enemy = Enemy()
 
     def drawWindow():
         WIN.fill(WHITE)
